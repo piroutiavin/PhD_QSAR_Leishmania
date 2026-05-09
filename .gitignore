@@ -1,0 +1,31 @@
+# Data files (too large for Git)
+data/raw/*.csv
+data/raw/*.csv.gz
+data/external/*.csv
+data/external/*.sdf
+
+# Trained models
+models/*.joblib
+models/*.pkl
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.egg-info/
+
+# Large outputs
+results/predictions/*.csv
+results/shap_outputs/*.npy
