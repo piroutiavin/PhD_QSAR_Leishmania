@@ -35,6 +35,10 @@ Thumbs.db
 ~$*.xlsx
 ~$*.pptx
 
+# Large descriptor matrices (>50 MB — regenerate by running notebook 03)
+data/processed/X_train.csv
+data/processed/X_test.csv
+
 # Large outputs
 results/predictions/*.csv
 results/shap_outputs/*.npy
