@@ -1,0 +1,33 @@
+# Core scientific stack (Python 3.14 compatible versions)
+numpy>=2.1
+pandas>=2.2
+scipy>=1.14
+
+# ML / cheminformatics
+scikit-learn>=1.5
+xgboost>=2.1
+lightgbm>=4.5
+imbalanced-learn>=0.12
+
+# Hyperparameter optimisation
+optuna>=3.6
+
+# Explainability
+shap>=0.46
+
+# Chemistry
+rdkit>=2024.3.3
+mordredcommunity
+chembl_webresource_client>=0.10.9
+
+# Visualisation
+matplotlib>=3.9
+seaborn>=0.13
+
+# Utilities
+joblib>=1.4
+tqdm>=4.66
+nbformat>=5.10
+
+# Jupyter kernel (required for VS Code / Jupyter integration)
+ipykernel>=6.29

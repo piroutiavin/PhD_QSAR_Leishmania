@@ -25,6 +25,15 @@ Thumbs.db
 # Environment
 .env
 *.egg-info/
+.venv/
+
+# Claude Code internal
+.claude/
+
+# Word/Office temp lock files
+~$*.docx
+~$*.xlsx
+~$*.pptx
 
 # Large outputs
 results/predictions/*.csv
