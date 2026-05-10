@@ -1,0 +1,3 @@
+model,n_optuna_trials,optuna_best_BA,cv_balanced_accuracy,cv_f1,cv_mcc,cv_roc_auc,cv_balanced_accuracy_std,cv_f1_std,cv_mcc_std,cv_roc_auc_std
+RF,30,0.7274,0.7582,0.7763,0.5143,0.8435,0.0083,0.0078,0.0165,0.0095
+SVM,20,0.7038,0.7342,0.7699,0.4715,0.8161,0.0112,0.0107,0.0229,0.0109
