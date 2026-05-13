@@ -337,7 +337,7 @@ Raw Data → [Step 1] SMILES Standardization
          → [Step 3] Handle Duplicates
          → [Step 4] Activity Conversion (IC50 → pIC50)
          → [Step 5] Activity Classification (Active/Inactive)
-         → [Step 6] Drug-likeness Filter
+         → [Step 6] Drug-likeness Filter (Lipinski Ro5 + organometallic removal)
          → [Step 7] Train/Test Split
          → Curated Dataset
 ```
@@ -455,25 +455,43 @@ print(f"Inactive compounds: {(df['activity_class'] == 'Inactive').sum()}")
 print(f"Ratio: {(df['activity_class'] == 'Active').sum() / len(df):.2%}")
 
 
-# --- STEP 6: Drug-likeness Filter ---
+# --- STEP 6: Drug-likeness Filter (Lipinski's Rule of Five) ---
 from rdkit.Chem import Descriptors
 
 def apply_druglikeness_filter(df):
-    """Remove non-drug-like compounds."""
+    """
+    Remove non-drug-like compounds using:
+    1. Lipinski's Rule of Five (compounds with ≥2 violations removed)
+    2. Organometallic filter (metal-containing compounds removed)
+    
+    Lipinski criteria:
+      - MW  ≤ 500 Da
+      - LogP ≤ 5
+      - HBD  ≤ 5  (hydrogen bond donors)
+      - HBA  ≤ 10 (hydrogen bond acceptors)
+    """
+    metals = {'Fe', 'Cu', 'Zn', 'Mn', 'Co', 'Ni', 'Pt', 'Pd', 'Ru',
+              'Rh', 'Ir', 'Os', 'Au', 'Ag', 'Hg', 'Cd', 'Cr', 'Mo', 'W'}
     filtered = []
+
     for _, row in df.iterrows():
         mol = Chem.MolFromSmiles(row['std_smiles'])
         if mol is None:
             continue
 
-        mw = Descriptors.MolWt(mol)
-        # Remove: MW > 900, organometallics, invalid structures
-        if mw > 900:
-            continue
         # Check for metals (organometallics)
-        metals = {'Fe', 'Cu', 'Zn', 'Mn', 'Co', 'Ni', 'Pt', 'Pd', 'Ru'}
         atoms = {atom.GetSymbol() for atom in mol.GetAtoms()}
         if atoms & metals:
+            continue
+
+        # Lipinski's Rule of Five
+        mw   = Descriptors.MolWt(mol)
+        logp = Descriptors.MolLogP(mol)
+        hbd  = Descriptors.NumHDonors(mol)
+        hba  = Descriptors.NumHAcceptors(mol)
+        violations = sum([mw > 500, logp > 5, hbd > 5, hba > 10])
+
+        if violations >= 2:
             continue
 
         filtered.append(row)
@@ -481,7 +499,7 @@ def apply_druglikeness_filter(df):
     return pd.DataFrame(filtered)
 
 df = apply_druglikeness_filter(df)
-print(f"After drug-likeness filter: {len(df)} compounds")
+print(f"After drug-likeness filter (Lipinski Ro5): {len(df)} compounds")
 
 
 # --- STEP 7: Train/Test Split ---
@@ -1638,7 +1656,7 @@ papers/
 | Checkpoint | When | What to Check | Pass Criteria |
 |-----------|------|---------------|---------------|
 | QC-1 | After data collection | Raw record count, missing SMILES | >5000 records, <5% missing |
-| QC-2 | After curation | Class balance, pIC50 distribution | Actives 20-50% of total |
+| QC-2 | After curation | Class balance, pIC50 distribution, Lipinski Ro5 compliance | Actives 20-50% of total, ≥90% Ro5 compliant |
 | QC-3 | After descriptors | NaN count, feature count | <5% NaN per column, 100-500 features |
 | QC-4 | After feature selection | No train/test overlap in features | Confirmed zero leakage |
 | QC-5 | After training | CV balanced accuracy | >0.70 for best model |

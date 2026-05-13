@@ -1,3 +1,3 @@
 model,n_estimators,max_depth,min_samples_split,min_samples_leaf,max_features,C,gamma,kernel
-RF,300.0,21.0,13.0,1.0,0.3,,,
-SVM,,,,,,64.59924785978339,0.002850432062787151,rbf
+RF,500.0,21.0,13.0,2.0,0.3,,,
+SVM,,,,,,7.04549009780998,0.0009483966376134078,rbf

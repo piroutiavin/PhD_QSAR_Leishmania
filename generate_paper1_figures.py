@@ -98,7 +98,7 @@ for ax, hue_col, palette, title_suffix in [
     sns.despine(ax=ax)
 
 plt.suptitle(
-    f'Chemical Space (943 selected descriptors, PCA)\n'
+    f'Chemical Space ({X_tr.shape[1]} selected descriptors, PCA)\n'
     f'n = {len(X_tr):,} train + {len(X_te):,} test compounds',
     fontsize=11, y=1.01
 )
@@ -281,8 +281,8 @@ desc_types = {
 }
 used_types  = {'Mordred 2D\n(~1,440)': 1440, 'ECFP4\n(2,048)': 2048, 'MACCS Keys\n(167)': 167}
 total_raw   = 1440 + 2048 + 167
-after_clean = 1656
-after_sel   = 943
+after_clean = 1607
+after_sel   = 951
 
 stages = ['Raw\n(concatenated)', 'After\nCleaning', 'After\nFeature Selection']
 counts = [total_raw, after_clean, after_sel]
@@ -320,7 +320,7 @@ print(f"Unique train scaffolds  : {n_tr_unique}")
 print(f"Unique test  scaffolds  : {n_te_unique}")
 print(f"Scaffold overlap        : {n_overlap} ({n_overlap/n_tr_unique*100:.1f}% of train)")
 print(f"Raw descriptors         : 3,655  (1440 Mordred + 2048 ECFP4 + 167 MACCS)")
-print(f"After cleaning          : 1,656")
-print(f"After feature selection : 943")
+print(f"After cleaning          : 1,607")
+print(f"After feature selection : 951")
 print("=" * 50)
 print("All Paper 1 figures saved to figures/paper1_*.png")
