@@ -104,7 +104,7 @@ This project is part of a PhD thesis. Code is provided for academic use.
 
 ## Author
 
-[Your Name] — [Your University]
+[Avin Piroutiniya] — [Universidad Complutense Madrid]
 
 ---
 *Prepared: May 2026*
