@@ -15,7 +15,10 @@
 
 ## Phase 1 — Dataset rebuild
 - [ ] 1.1 Apply `filter_sulfonamides()` to curated data → sulfonamide-only set (~643 molecules)
-- [ ] 1.2 Split into 4 per-organism datasets: *L. infantum* (137, primary), *L. donovani* (230), *T. cruzi* (362), *L. amazonensis* (72)
+- [ ] 1.2 **Partition** (not train/test split) the sulfonamide compounds **by organism** into 4 independent datasets,
+      one molecule per row with a single organism-consistent label:
+      *L. infantum* (137, primary), *L. donovani* (230), *T. cruzi* (362), *L. amazonensis* (72).
+      Each gets its own model; the train/test split happens later per-dataset in 2.1.
 - [ ] 1.3 Resolve duplicate/conflicting labels **within each organism** (one label per molecule)
 - [ ] 1.4 Fix curation gaps: tautomer canonicalization; prefer existing `pchembl_value`; IC50/EC50 per decision below
 - [ ] 1.5 Report real per-organism counts (molecules, actives/inactives, scaffolds) before modeling

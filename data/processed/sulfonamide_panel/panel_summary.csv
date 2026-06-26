@@ -1,0 +1,5 @@
+organism,key,molecules,active,inactive,active_pct,scaffolds,ec50_records,discordant_dropped,concordant_merged
+Leishmania infantum,L_infantum,142,71,71,50.0,79,2,0,15
+Leishmania donovani,L_donovani,238,108,130,45.4,142,30,16,96
+Trypanosoma cruzi,T_cruzi,398,279,119,70.1,242,84,25,101
+Leishmania amazonensis,L_amazonensis,72,34,38,47.2,42,21,0,10
