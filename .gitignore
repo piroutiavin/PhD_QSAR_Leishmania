@@ -41,6 +41,9 @@ data/processed/X_test.csv
 data/processed/X_train_selected.csv
 data/processed/X_test_selected.csv
 
+# Panel Mordred matrix (~14 MB — regenerate via `python -m src.descriptors`)
+data/processed/sulfonamide_panel/mordred_descriptors.csv
+
 # Large outputs
 results/predictions/*.csv
 results/shap_outputs/*.npy
