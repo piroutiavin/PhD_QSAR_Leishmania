@@ -7,8 +7,10 @@ are wrapped in a Pipeline so they are refit inside every training fold — no
 information from the held-out fold leaks into selection. This replaces the old
 single leaky held-out test.
 
-Models are deliberately light (appropriate for n=72-398) and a DummyClassifier
-provides the no-skill baseline. Hyperparameter search is added in Phase 2.4.
+Full algorithm panel (parity with the original project, all under the same
+leakage-free protocol): Dummy baseline, LogReg, SVM-RBF, RandomForest,
+GradientBoosting, XGBoost, LightGBM, plus a soft-voting Consensus and a
+Stacking (LR meta) ensemble over the base learners.
 
 Run:  .venv/Scripts/python.exe -m src.evaluate
 """
@@ -19,14 +21,18 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import (RandomForestClassifier, GradientBoostingClassifier,
+                              VotingClassifier, StackingClassifier)
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (balanced_accuracy_score, f1_score,
                              matthews_corrcoef, roc_auc_score)
+from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from xgboost import XGBClassifier
+from lightgbm import LGBMClassifier
 
 from src.data_splitting import RepeatedScaffoldCV, scaffold_groups
 
@@ -40,18 +46,40 @@ def _mi(X, y):
     return mutual_info_classif(X, y, random_state=0)
 
 
-def make_models() -> dict:
-    """Light models suited to small data; class_weight balances imbalanced sets."""
-    return {
-        "Dummy": DummyClassifier(strategy="stratified", random_state=0),
-        "LogReg": LogisticRegression(max_iter=2000, class_weight="balanced"),
-        "SVM-RBF": SVC(kernel="rbf", probability=False, class_weight="balanced"),
+def make_models(pos_weight: float = 1.0) -> dict:
+    """
+    Full model panel. class_weight balances the imbalanced sets; XGBoost has no
+    class_weight so it takes scale_pos_weight (neg/pos ratio of the organism).
+    """
+    base = {
+        "LogReg": LogisticRegression(max_iter=5000, class_weight="balanced"),
+        "SVM-RBF": SVC(kernel="rbf", probability=True, class_weight="balanced",
+                       random_state=0),
         "RandomForest": RandomForestClassifier(
             n_estimators=400, max_depth=6, min_samples_leaf=3,
             class_weight="balanced", random_state=0, n_jobs=-1),
         "GradBoost": GradientBoostingClassifier(
             n_estimators=200, max_depth=2, learning_rate=0.05, random_state=0),
+        "XGBoost": XGBClassifier(
+            n_estimators=300, max_depth=3, learning_rate=0.05,
+            subsample=0.8, colsample_bytree=0.8, eval_metric="logloss",
+            scale_pos_weight=pos_weight, random_state=0, n_jobs=-1),
+        "LightGBM": LGBMClassifier(
+            n_estimators=300, max_depth=3, learning_rate=0.05,
+            subsample=0.8, colsample_bytree=0.8, class_weight="balanced",
+            random_state=0, n_jobs=-1, verbose=-1),
     }
+    estimators = [(k, v) for k, v in base.items()
+                  if k in ("LogReg", "SVM-RBF", "RandomForest", "XGBoost", "LightGBM")]
+    models = {"Dummy": DummyClassifier(strategy="stratified", random_state=0)}
+    models.update(base)
+    # soft-voting consensus + stacking (LR meta) over the 5 base learners
+    models["Consensus"] = VotingClassifier(estimators=estimators, voting="soft")
+    models["Stacking"] = StackingClassifier(
+        estimators=estimators,
+        final_estimator=LogisticRegression(max_iter=5000),
+        cv=StratifiedKFold(5, shuffle=True, random_state=0))
+    return models
 
 
 def pipeline_for(model) -> Pipeline:
@@ -76,13 +104,13 @@ def evaluate_dataset(df: pd.DataFrame, desc: pd.DataFrame) -> pd.DataFrame:
     y = (d["activity_class"] == "Active").astype(int).to_numpy()
     groups = scaffold_groups(d)
     cv = RepeatedScaffoldCV(n_splits=5, n_repeats=5, seed=42)
+    pos_weight = (y == 0).sum() / max((y == 1).sum(), 1)   # neg/pos for XGBoost
 
     rows = []
-    for name, model in make_models().items():
+    for name, model in make_models(pos_weight).items():
         per_fold = {"BalAcc": [], "F1": [], "MCC": [], "ROC_AUC": []}
         for tri, tei in cv.split(X, y, groups):
             pipe = pipeline_for(model)
-            # SVC needs probability for AUC; use decision_function instead
             pipe.fit(X[tri], y[tri])
             yp = pipe.predict(X[tei])
             ys = _scores(pipe.named_steps["clf"],
