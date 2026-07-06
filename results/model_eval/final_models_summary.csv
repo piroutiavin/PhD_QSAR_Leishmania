@@ -1,5 +1,5 @@
-organism,n,best_family,nested_MCC_mean,nested_MCC_std,best_params
-L_amazonensis,72,LogReg,0.603,0.161,{'clf__C': 0.01}
-L_donovani,238,RandomForest,0.477,0.171,"{'clf__max_depth': None, 'clf__min_samples_leaf': 5}"
-L_infantum,142,LogReg,0.508,0.173,{'clf__C': 1.0}
-T_cruzi,398,RandomForest,0.35,0.151,"{'clf__max_depth': None, 'clf__min_samples_leaf': 5}"
+organism,n,final_family,final_nested_MCC_mean,final_nested_MCC_std,panel_argmax_family,panel_argmax_MCC,best_params
+L_amazonensis,72,LogReg,0.603,0.161,LogReg,0.603,{'clf__C': 0.01}
+L_donovani,238,RandomForest,0.477,0.171,RandomForest,0.477,"{'clf__max_depth': None, 'clf__min_samples_leaf': 5}"
+L_infantum,142,LogReg,0.508,0.173,LogReg,0.508,{'clf__C': 1.0}
+T_cruzi,398,SVM-RBF,0.346,0.132,Consensus,0.353,"{'clf__C': 1.0, 'clf__gamma': 'scale'}"
