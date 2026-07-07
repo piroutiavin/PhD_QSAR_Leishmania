@@ -1,0 +1,5 @@
+organism,n,active_pct,final_model,MCC,ROC_AUC,BalAcc,AD_inside_%,Yrand_p
+L. infantum,142,50.0,LogReg,0.42 ± 0.21,0.74 ± 0.14,0.70,98.6,0.02
+L. donovani,238,45.4,RandomForest,0.28 ± 0.24,0.70 ± 0.14,0.63,97.1,0.02
+T. cruzi,398,70.1,SVM-RBF,0.33 ± 0.16,0.73 ± 0.10,0.67,97.5,0.02
+L. amazonensis,72,47.2,LogReg,0.39 ± 0.23,0.69 ± 0.11,0.68,95.8,0.02
