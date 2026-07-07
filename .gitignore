@@ -47,3 +47,6 @@ data/processed/sulfonamide_panel/mordred_descriptors.csv
 # Large outputs
 results/predictions/*.csv
 results/shap_outputs/*.npy
+
+# Archived old-pipeline manuscripts (kept locally, not in repo)
+legacy_manuscripts/
