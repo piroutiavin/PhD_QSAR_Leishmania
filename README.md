@@ -1,110 +1,113 @@
-# ML-Based QSAR Modeling for Anti-Leishmanial Sulfonamide Derivatives
+# Leakage-Free QSAR Panel for Anti-Kinetoplastid Sulfonamides
 
-**PhD Thesis Project** — Machine Learning-Based QSAR Modeling for Prediction and Optimization of Anti-Leishmanial Activity of Sulfonamide Derivatives Against *Leishmania infantum*
+**PhD Thesis Project** — Machine-learning QSAR models predicting the activity of **sulfonamide derivatives** against kinetoplastid parasites, with ***Leishmania infantum*** as the primary target.
 
-## Project Overview
+> **Scope note (read first).** An earlier version of this project trained a single
+> classifier on the full multi-organism ChEMBL dataset. That approach mixed four
+> parasites, was only ~6% sulfonamides, and used a random train/test split that
+> leaked ~29% of test molecules into training (inflating performance). This
+> repository is the **corrected rebuild**: sulfonamide-only, one model per
+> organism, and a leakage-free scaffold-grouped protocol. See
+> [ENHANCEMENT_TODO.md](ENHANCEMENT_TODO.md) for the full rationale.
 
-This project develops machine learning (ML)-based Quantitative Structure-Activity Relationship (QSAR) models to predict the anti-leishmanial activity of sulfonamide compounds against *Leishmania infantum* intracellular amastigotes. The study integrates cheminformatics, machine learning, and medicinal chemistry for neglected tropical disease drug discovery.
+## What this project delivers
 
-## Project Structure
+A **panel of four per-organism binary classifiers** (Active vs Inactive at
+pIC50 ≥ 5.0, i.e. IC50 ≤ 10 µM) for sulfonamide compounds, each built and
+validated under an identical, honest protocol:
 
-```
-PhD_QSAR_Leishmania/
-├── data/
-│   ├── raw/                  # Untouched data from ChEMBL/PubChem
-│   ├── processed/            # Curated, clean datasets
-│   └── external/             # Screening libraries (ZINC, Enamine)
-├── notebooks/                # Jupyter notebooks (numbered sequentially)
-│   ├── 01_data_collection.ipynb
-│   ├── 02_data_curation.ipynb
-│   ├── 03_descriptor_calculation.ipynb
-│   ├── 04_feature_selection.ipynb
-│   ├── 05_model_training_RF_SVM.ipynb
-│   ├── 06_model_training_XGB_LGBM.ipynb
-│   ├── 07_consensus_model.ipynb
-│   ├── 08_model_validation.ipynb
-│   ├── 09_SHAP_analysis.ipynb
-│   ├── 10_virtual_screening.ipynb
-│   └── 11_results_analysis.ipynb
-├── src/                      # Reusable Python modules
-├── models/                   # Saved trained models (.joblib)
-├── results/                  # Output results and metrics
-├── figures/                  # Publication-ready figures
-└── papers/                   # Manuscript drafts organized by paper
-```
+| Organism | n | Active % | Final model | **Honest CV MCC** | ROC-AUC | AD coverage | Y-rand p |
+|---|---|---|---|---|---|---|---|
+| ***L. infantum*** (primary) | 142 | 50.0 | Logistic Regression | **0.42 ± 0.21** | 0.74 ± 0.14 | 98.6% | 0.02 |
+| *L. amazonensis* | 72 | 47.2 | Logistic Regression | 0.39 ± 0.23 | 0.69 ± 0.11 | 95.8% | 0.02 |
+| *T. cruzi* | 398 | 70.1 | SVM-RBF | 0.33 ± 0.16 | 0.73 ± 0.10 | 97.5% | 0.02 |
+| *L. donovani* | 238 | 45.4 | Random Forest | 0.28 ± 0.24 | 0.70 ± 0.14 | 97.1% | 0.02 |
 
-## Pipeline Overview
+Metrics are the mean ± std over **repeated, scaffold-grouped, activity-stratified
+cross-validation** with feature selection refit inside every fold (no selection
+leakage). These are modest but *honest* small-data results; the models beat a
+Y-randomized baseline (p = 0.02) with 95–99% applicability-domain coverage.
 
-1. **Data Collection** — Mine ChEMBL, PubChem, and literature for anti-kinetoplastid bioactivity data
-2. **Data Curation** — Standardize structures, handle duplicates, filter sulfonamides
-3. **Descriptor Calculation** — Mordred 2D descriptors, ECFP4/MACCS fingerprints
-4. **Feature Selection** — Dual-filter (Mutual Information + RF importance)
-5. **Model Training** — RF, SVM, XGBoost, LightGBM with Optuna tuning
-6. **Consensus Model** — Voting ensemble (≥3/4 agreement)
-7. **SHAP Analysis** — Explainable AI for SAR interpretation
-8. **Virtual Screening** — Screen ZINC/Enamine with AD and ADMET filters
-9. **Experimental Validation** — In vitro testing of top 10–20 candidates
+## Methodology (corrected pipeline)
 
-## Setup Instructions
+1. **Dataset rebuild** — filter raw ChEMBL to sulfonamides (SMARTS `S(=O)(=O)N`);
+   standardize with tautomer canonicalization; prefer `pchembl_value`; per-organism
+   dedup (concordant → median, discordant → drop); partition **by organism**.
+2. **Leakage-free splitting** — Murcko scaffold-grouped CV; no molecule or scaffold
+   spans train/test.
+3. **Descriptors & feature reduction** — ~1,600 Mordred 2D descriptors → label-free
+   correlation filter → **stability selection to 12 interpretable descriptors** per
+   organism.
+4. **Model evaluation** — full algorithm panel (LogReg, SVM-RBF, RandomForest,
+   GradientBoosting, **XGBoost, LightGBM, soft-voting Consensus, Stacking**) under
+   the leakage-free CV. None outperformed the best single interpretable model within
+   uncertainty.
+5. **Final models** — nested-CV hyperparameter tuning; **parsimony rule** selects the
+   simplest interpretable model where the panel ties within noise.
+6. **Interpretation (SHAP)** — per-organism SAR; the drivers are largely
+   **organism-specific** (only one descriptor is shared across ≥2 organisms).
+7. **Validation** — Williams-plot applicability domain + Y-randomization.
 
-### 1. Install Miniconda
-Download from: https://docs.conda.io/en/latest/miniconda.html
+### IC50 vs EC50
+These are whole-cell phenotypic assays where IC50/EC50 denote the same 50%-growth
+effect, so they are pooled for the classifier; `standard_type` is retained per
+record so the choice is auditable and an IC50-only sensitivity check is possible.
 
-### 2. Create Environment
+## Pipeline (`src/`) — run order
+
 ```bash
-conda env create -f environment.yml
-conda activate qsar-leish
+# uses the project virtualenv (sklearn, xgboost, lightgbm, shap, rdkit, mordred)
+python -m src.build_sulfonamide_panel   # Phase 1  -> data/processed/sulfonamide_panel/
+python -m src.data_splitting            # Phase 2.1 (verify zero leakage)
+python -m src.descriptors               # Phase 2.2a Mordred descriptor matrix
+python -m src.feature_selection         # Phase 2.2b top-12 per organism
+python -m src.evaluate                  # Phase 2.3 honest full-panel CV
+python -m src.train_final               # Phase 2.4 tuning + final models
+python -m src.shap_analysis             # Phase 2.5 SHAP / SAR
+python -m src.validation                # Phase 3.1 applicability domain + Y-randomization
+python -m src.report                    # Phase 3.2/3.4 master table + cross-species SAR
 ```
 
-### 3. Verify Installation
-```bash
-python -c "import rdkit; import sklearn; import xgboost; print('All packages OK')"
-```
+> The numbered notebooks `notebooks/01–11` are the **legacy** (pre-rebuild)
+> pipeline, retained for provenance. The `src/` modules above supersede them.
 
-### 4. Launch Jupyter
-```bash
-jupyter lab
-# Then open notebooks/01_data_collection.ipynb
-```
+## Key outputs
 
-## Key Targets
+- `data/processed/sulfonamide_panel/` — the four per-organism datasets + summary
+- `results/model_eval/` — full-panel CV results, nested tuning, final model summary
+- `results/feature_selection/` — per-organism selected descriptors
+- `results/shap_panel/`, `results/validation/`, `results/report/` — SAR, AD/Y-rand, master table
+- `figures/sulfonamide_panel/` — SHAP, Williams, and performance-summary figures
+- `models/sulfonamide_panel/` — deployable per-organism pipelines (gitignored, regenerable)
 
-| Target | ChEMBL ID | Species |
-|--------|-----------|---------|
-| *L. infantum* | CHEMBL612848 | Primary target |
+## Targets
+
+| Target | ChEMBL ID | Role |
+|--------|-----------|------|
+| *L. infantum* | CHEMBL612848 | **Primary** |
 | *L. donovani* | CHEMBL367 | Cross-species |
 | *L. amazonensis* | CHEMBL612877 | Cross-species |
 | *T. cruzi* | CHEMBL368 | Cross-kinetoplastid |
 
-## Activity Thresholds
+## Setup
 
-- **Active**: pIC50 ≥ 5.0 (IC50 ≤ 10 μM)
-- **Inactive**: pIC50 < 5.0 (IC50 > 10 μM)
+```bash
+python -m venv .venv
+.venv/Scripts/activate        # Windows (use source .venv/bin/activate on Unix)
+pip install -r requirements.txt
+```
 
-## Publication Plan
+## Software stack (free & open-source)
 
-1. **Paper 1** — Curated sulfonamide anti-kinetoplastid bioactivity dataset
-2. **Paper 2** — ML-QSAR consensus models + SHAP-based SAR
-3. **Paper 3** — Experimental validation of ML-predicted sulfonamides
-
-## Software Stack (All Free & Open-Source)
-
-- **Python 3.11** + Jupyter
-- **RDKit** — Molecular handling, fingerprints, SMARTS
-- **Mordred** — 1,800+ molecular descriptors
-- **Scikit-learn** — RF, SVM, cross-validation
-- **XGBoost / LightGBM** — Gradient boosting
-- **Optuna** — Bayesian hyperparameter optimization
-- **SHAP** — Explainable AI
-- **imbalanced-learn** — SMOTE for class imbalance
+Python 3 · RDKit · Mordred · scikit-learn · XGBoost · LightGBM · SHAP · pandas/NumPy · matplotlib
 
 ## License
 
-This project is part of a PhD thesis. Code is provided for academic use.
+Part of a PhD thesis. Code provided for academic use.
 
 ## Author
 
-[Your Name] — [Your University]
+Avin — *affiliation to be added*
 
 ---
-*Prepared: May 2026*
+*Rebuild completed: 2026-07.*
