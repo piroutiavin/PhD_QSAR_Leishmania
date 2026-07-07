@@ -1,0 +1,5 @@
+organism,real_MCC,yrand_MCC_mean,yrand_MCC_max,p_value
+L_amazonensis,0.554,-0.017,0.247,0.02
+L_donovani,0.383,0.002,0.201,0.02
+L_infantum,0.508,0.028,0.296,0.02
+T_cruzi,0.392,0.014,0.169,0.02
