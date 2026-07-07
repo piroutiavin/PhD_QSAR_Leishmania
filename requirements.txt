@@ -31,3 +31,4 @@ nbformat>=5.10
 
 # Jupyter kernel (required for VS Code / Jupyter integration)
 ipykernel>=6.29
+python-docx
