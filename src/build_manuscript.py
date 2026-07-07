@@ -87,9 +87,10 @@ def build():
                     "Anti-Kinetoplastid Sulfonamides, with Leishmania infantum "
                     "as the Primary Target")
     tr.bold = True; tr.font.size = Pt(14); tr.font.name = "Times New Roman"
-    body(doc, "Avin", size=12, align=WD_ALIGN_PARAGRAPH.CENTER, space=2, bold=True)
-    body(doc, "Affiliation to be added", size=10, italic=True,
-         align=WD_ALIGN_PARAGRAPH.CENTER, space=10)
+    body(doc, "Avin Piroutiniya", size=12, align=WD_ALIGN_PARAGRAPH.CENTER,
+         space=2, bold=True)
+    body(doc, "Universidad Complutense de Madrid, Madrid, Spain", size=10,
+         italic=True, align=WD_ALIGN_PARAGRAPH.CENTER, space=10)
 
     # ── Abstract ──
     h1(doc, "Abstract")

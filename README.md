@@ -107,7 +107,7 @@ Part of a PhD thesis. Code provided for academic use.
 
 ## Author
 
-Avin — *affiliation to be added*
+Avin Piroutiniya — Universidad Complutense de Madrid
 
 ---
 *Rebuild completed: 2026-07.*
